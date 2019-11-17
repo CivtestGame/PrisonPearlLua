@@ -17,7 +17,8 @@ local function pearl_on_use(itemstack, user)
     local meta = itemstack:get_meta()
     if meta:contains("prisoner") then
         local name = meta:get_string("prisoner")
-        if pp.manager:is_imprisoned(name) and pp.manager:free_pearl(name) then
+        if pp.manager.is_imprisoned(name) then
+            pp.manager.free_pearl(name)
             minetest.chat_send_player(user:get_player_name(), "Player " .. name .. " has been freed.")
             local meta = itemstack:get_meta()
             meta:set_string("prisoner", "")
@@ -39,21 +40,21 @@ minetest.register_craftitem("prisonpearl:pearl", {
         local meta = itemstack:get_meta()
         if meta:contains("prisoner") then
             local name = meta:get_string("prisoner")
-            pearl = pp.manager:get_pearl_by_name(name)
-            if pearl == nil then
+            pearl = pp.manager.get_pearl_by_name(name)
+            if not pearl then
                 minetest.debug("Faulty pearl detected with name: " .. name .. " deleting.")
                 local meta = itemstack:get_meta()
                 meta:set_string("prisoner", "")
                 meta:set_string("description", "Prison Pearl")
-            else 
+            else
                 local location = {type="ground", pos=pos}
-                pp.manager:update_pearl_location(pearl, location)
+                pp.manager.update_pearl_location(pearl, location)
                 end
             end
         minetest.item_drop(itemstack, dropper, pos)
         return itemstack
     end,
-    
+
 })
 
 -- Lets handle all situations when a prisonshard is moved
