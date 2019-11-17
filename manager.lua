@@ -44,6 +44,17 @@ function pp.manager.award_pearl(victim, attacker)
     return false
 end
 
+function pp.is_bound_prison_pearl(item)
+   local meta = item:get_meta()
+   return item:get_name() == "prisonpearl:pearl"
+      and meta:get_string("prisoner") ~= ""
+end
+
+function pp.get_pearl_prisoner(item)
+   local meta = item:get_meta()
+   return meta:get_string("prisoner")
+end
+
 function pp.manager.update_pearl_location(pearl, location)
     pearl.location = location
     pearl.isDirty = true
@@ -67,19 +78,23 @@ local function get_pos_by_type(pearl)
     if pearl.location.type == 'player' then
        local player = minetest.get_player_by_name(pearl.location.name)
        if player then
-          return player:get_pos()
+          local pos = player:get_pos()
+          return pos, "Your pearl is held by "
+             .. player:get_player_name() .. " at " .. vtos(pos) .. "."
        else
           -- FIXME: Dirty defensive hack for cases where pearler logs out with
           -- pearl and the pearl object's location is stale...
           local pearled = pearl.name
           pp.manager.free_pearl(pearl.name)
           minetest.debug("Freed " .. pearled .. " (holder not found)")
-          return nil
+          return nil, "You have been freed! Please log back in."
        end
     elseif pearl.location.type == 'node' then
-        return pearl.location.pos
+       local pos = pearl.location.pos
+       return pos, "Your pearl is held in a container at " .. vtos(pos) .. "."
     elseif pearl.location.type == 'ground' then
-        return pearl.location.pos
+       local pos = pearl.location.pos
+       return pos, "Your pearl is on the ground at " .. vtos(pos) .. "."
     end
 end
 
@@ -89,9 +104,9 @@ minetest.register_on_joinplayer(function(player)
       if pp.manager.is_imprisoned(pname) then
          player:set_hp(0)
          local pearl = pp.manager.get_pearl_by_name(pname)
-         local pos = get_pos_by_type(pearl)
+         local pos, message = get_pos_by_type(pearl)
          if pos then
-            minetest.kick_player(pname, "You are pearled! Your pearl is at " .. vtos(pos))
+            minetest.kick_player(pname, message)
          else
             minetest.chat_send_player(pname, "You were freed from your pearl!")
          end
