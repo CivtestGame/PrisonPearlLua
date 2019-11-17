@@ -14,9 +14,14 @@ local function load_pearls()
     minetest.debug("Loaded Pearls")
 end
 
---minetest.register_on_shutdown(function()
---    save_pearls()
---end)
+local civmisc = minetest.get_modpath("civmisc")
+if civmisc then
+   cleanup.register_cleanup_action("PRISONPEARL SAVE PEARLS", function()
+         save_pearls()
+         return true
+   end)
+end
+
 load_pearls()
 -- This function let's the mod know that we need to start tracking a pearl created from someone dying
 function pp.manager.award_pearl(victim, attacker)
@@ -80,7 +85,7 @@ local function get_pos_by_type(pearl)
        if player then
           local pos = player:get_pos()
           return pos, "Your pearl is held by "
-             .. player:get_player_name() .. " at " .. vtos(pos) .. "."
+             .. player:get_player_name() .. " at " .. vtos(vector.floor(pos)) .. "."
        else
           -- FIXME: Dirty defensive hack for cases where pearler logs out with
           -- pearl and the pearl object's location is stale...
