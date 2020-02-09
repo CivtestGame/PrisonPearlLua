@@ -65,3 +65,61 @@ minetest.register_on_player_inventory_action(function(player, action, inventory,
         --minetest.chat_send_player(player:get_player_name(), index.. ' ' .. tostring(name))
         end
 end)
+
+--------------------------------------------------------------------------------
+--
+-- Container PrisonPearl tracking hook wrappers
+--
+--------------------------------------------------------------------------------
+
+function pp.wrap_on_metadata_inventory_put(def)
+   local old_on_metadata_inventory_put = def.on_metadata_inventory_put
+   def.on_metadata_inventory_put = function(pos, listname, index, stack, player)
+      if pp.is_bound_prison_pearl(stack) then
+         local pname = player:get_player_name()
+         local prisoner = pp.get_pearl_prisoner(stack)
+         local pearl = pp.manager.get_pearl_by_name(prisoner)
+         if pearl then
+            pp.manager.update_pearl_location(pearl, { type = "node", pos = pos })
+            minetest.log(
+               pname .. " placed " .. prisoner .. "'s pearl into " .. def.name
+                  .. " at (" .. vtos(pos) .. ")."
+            )
+         end
+      end
+      if old_on_metadata_inventory_put then
+         return old_on_metadata_inventory_put(pos, listname, index, stack, player)
+      end
+   end
+   return def
+end
+
+function pp.wrap_on_metadata_inventory_take(def)
+   local old_on_metadata_inventory_take = def.on_metadata_inventory_take
+   def.on_metadata_inventory_take = function(pos, listname, index, stack, player)
+      if pp.is_bound_prison_pearl(stack) then
+         local pname = player:get_player_name()
+         local prisoner = pp.get_pearl_prisoner(stack)
+         local pearl = pp.manager.get_pearl_by_name(prisoner)
+         if pearl then
+            pp.manager.update_pearl_location(pearl, { type = "player", name = pname })
+            minetest.log(
+               pname .. " took " .. prisoner .. "'s pearl from " .. def.name
+                  .. " at (" .. vtos(pos) .. ")."
+            )
+         end
+      end
+      if old_on_metadata_inventory_take then
+         return old_on_metadata_inventory_take(pos, listname, index, stack, player)
+      end
+   end
+   return def
+end
+
+function pp.override_definition(olddef)
+   local def = table.copy(olddef)
+   pp.wrap_on_metadata_inventory_put(def)
+   pp.wrap_on_metadata_inventory_take(def)
+
+   return def
+end
