@@ -1,30 +1,27 @@
-local imprisoned_players = {} -- name : {pearl details}
+ -- name : {pearl details}
 local storage = minetest.get_mod_storage()
-local function save_pearls()
-    storage:set_string("pearls", minetest.serialize(imprisoned_players))
+function pp.save_pearls()
+    storage:set_string("pearls", minetest.serialize(pp.imprisoned_players))
     minetest.debug("Saved Pearls")
-    minetest.debug(minetest.serialize(imprisoned_players))
+    minetest.debug(minetest.serialize(pp.imprisoned_players))
 end
 
-local function load_pearls()
-    imprisoned_players = minetest.deserialize(storage:get_string("pearls"))
-    if imprisoned_players == nil then
-        imprisoned_players = {}
+function pp.load_pearls()
+    pp.imprisoned_players = minetest.deserialize(storage:get_string("pearls"))
+    if pp.imprisoned_players == nil then
+        pp.imprisoned_players = {}
         end
     minetest.debug("Loaded Pearls")
 end
 
-local civmisc = minetest.get_modpath("civmisc")
-if civmisc then
-   cleanup.register_cleanup_action("PRISONPEARL SAVE PEARLS", function()
-         save_pearls()
-         return true
-   end)
-end
+pp.load_pearls()
 
-load_pearls()
+minetest.register_on_shutdown(function()
+   pp.save_pearls()
+end)
+
 -- This function let's the mod know that we need to start tracking a pearl created from someone dying
-function pp.manager.award_pearl(victim, attacker)
+function pp.award_pearl(victim, attacker)
     -- Now we need to award a prison item to the attacker.
     local location = {type="player", name=attacker}
     local inv = minetest.get_inventory(location)
@@ -38,10 +35,10 @@ function pp.manager.award_pearl(victim, attacker)
                 inv:set_stack("main", i, item)
 
                 -- Now we want to add the player to the db tracking
-                imprisoned_players[victim] = {name=victim, location=location, isDirty=true}
+                pp.imprisoned_players[victim] = {name=victim, location=location, isDirty=true}
                 -- Now we want to kick the player
                 minetest.kick_player(victim, "You have been pearled!")
-                save_pearls()
+                pp.save_pearls()
                 return true
                 end
             end
@@ -49,37 +46,19 @@ function pp.manager.award_pearl(victim, attacker)
     return false
 end
 
-function pp.is_bound_prison_pearl(item)
-   local meta = item:get_meta()
-   return item:get_name() == "prisonpearl:pearl"
-      and meta:get_string("prisoner") ~= ""
-end
 
-function pp.get_pearl_prisoner(item)
-   local meta = item:get_meta()
-   return meta:get_string("prisoner")
-end
-
-function pp.manager.update_pearl_location(pearl, location)
+function pp.update_pearl_location(pearl, location)
     pearl.location = location
     pearl.isDirty = true
 end
 
-function pp.manager.is_imprisoned(name)
-    return imprisoned_players[name] ~= nil
-end
-
-function pp.manager.get_pearl_by_name(name)
-    return imprisoned_players[name]
-end
-
-function pp.manager.free_pearl(name)
-    imprisoned_players[name] = nil
+function pp.free_pearl(name)
+    pp.imprisoned_players[name] = nil
     -- minetest.unban_player_or_ip(name)
-    save_pearls()
+    pp.save_pearls()
 end
 
-local function get_pos_by_type(pearl)
+function pp.get_pos_by_type(pearl)
     if pearl.location.type == 'player' then
        local player = minetest.get_player_by_name(pearl.location.name)
        if player then
@@ -90,7 +69,7 @@ local function get_pos_by_type(pearl)
           -- FIXME: Dirty defensive hack for cases where pearler logs out with
           -- pearl and the pearl object's location is stale...
           local pearled = pearl.name
-          pp.manager.free_pearl(pearl.name)
+          pp.free_pearl(pearl.name)
           minetest.debug("Freed " .. pearled .. " (holder not found)")
           return nil, "You have been freed! Please log back in."
        end
@@ -102,18 +81,3 @@ local function get_pos_by_type(pearl)
        return pos, "Your pearl is on the ground at " .. vtos(pos) .. "."
     end
 end
-
--- Kick pearled players on join
-minetest.register_on_joinplayer(function(player)
-      local pname = player:get_player_name()
-      if pp.manager.is_imprisoned(pname) then
-         player:set_hp(0)
-         local pearl = pp.manager.get_pearl_by_name(pname)
-         local pos, message = get_pos_by_type(pearl)
-         if pos then
-            minetest.kick_player(pname, message)
-         else
-            minetest.chat_send_player(pname, "You were freed from your pearl!")
-         end
-      end
-end)
