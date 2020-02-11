@@ -96,10 +96,20 @@ minetest.register_chatcommand("pplocate", {
          )
       else
          local pos = pp.get_pos_by_type(pearl_entry)
+         local msg = ""
+
+         if pearl_entry.location.type == "player" then
+            msg = "by " .. pearl_entry.location.name
+         elseif pearl_entry.location.type == "node" then
+            msg = "in a container"
+         elseif pearl_entry.location.type == "ground" then
+            msg = "on the ground"
+         end
+
          minetest.chat_send_player(
             sender_name,
-            "Player " .. player .. " is imprisoned at ("
-               .. vtos(pos) .. ") [" .. pearl_entry.location.type .. "]."
+            "Player " .. player .. " is imprisoned " .. msg .. " at ("
+               .. vtos(pos) .. ")."
          )
       end
 
