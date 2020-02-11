@@ -21,17 +21,29 @@ minetest.register_on_shutdown(function()
 end)
 
 -- This function let's the mod know that we need to start tracking a pearl created from someone dying
-function pp.award_pearl(victim, attacker)
+function pp.award_pearl(victim, attacker, create_pearl)
     -- Now we need to award a prison item to the attacker.
     local location = {type="player", name=attacker}
     local inv = minetest.get_inventory(location)
+    local stack = {name="prisonpearl:pearl", count=1, metadata=""}
+    if create_pearl
+       and inv
+       and not inv:contains_item("main", stack)
+    then
+       if inv:room_for_item("main", stack) then
+          inv:add_item("main", stack)
+       else
+          return false
+       end
+    end
+
     for i, item in ipairs(inv:get_list("main")) do -- Update the item,
         if item:get_name() == "prisonpearl:pearl" then -- Now we need to check if it has metadata or not
             local meta = item:get_meta()
             if meta:get_string("prisoner") == "" then
                -- If no meta data then we know that we can use it
                 meta:set_string("prisoner", victim)
-                meta:set_string("description", victim .. " has been trapped")
+                meta:set_string("description", victim .. "'s PrisonPearl")
                 inv:set_stack("main", i, item)
 
                 -- Now we want to add the player to the db tracking

@@ -72,25 +72,23 @@ local function register_pearl_pickup_tracker()
       if self.itemstring then
          local itemstack = ItemStack(self.itemstring)
          local item_is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(itemstack)
-         if item_is_a_pearl then
+         if item_is_a_pearl and prisoner then
             self.timer = self.timer or 0
             self.timer = self.timer + dtime
             if self.timer >= 1 then
-               if item_is_a_pearl then
-                  local pearl = pp.get_pearl_by_name(prisoner)
-                  if not pearl then
-                     minetest.log("Found faulty pearl for " .. prisoner .. ", resetting...")
-                     pp.reset_pearl(itemstack)
-                     self:set_item(itemstack)
-                  elseif pearl.location.type ~= "ground" then
-                     local pos = self.object:get_pos()
-                     local location = { type="ground", pos=pos }
-                     pp.update_pearl_location(pearl, location)
-                     minetest.log(
-                        "The pearl of " .. prisoner
-                           .. " had location updated to ground at (" .. vtos(pos) .. ")."
-                     )
-                  end
+               local pearl = pp.get_pearl_by_name(prisoner)
+               if not pearl then
+                  minetest.log("Found faulty pearl for " .. prisoner .. ", resetting...")
+                  pp.reset_pearl(itemstack)
+                  self:set_item(itemstack)
+               elseif pearl.location.type ~= "ground" then
+                  local pos = self.object:get_pos()
+                  local location = { type="ground", pos=pos }
+                  pp.update_pearl_location(pearl, location)
+                  minetest.log(
+                     "The pearl of " .. prisoner
+                        .. " had location updated to ground at (" .. vtos(pos) .. ")."
+                  )
                end
                self.timer = 0
             end
@@ -107,7 +105,7 @@ local function register_pearl_pickup_tracker()
       if self.itemstring then
          local itemstack = ItemStack(self.itemstring)
          local item_is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(itemstack)
-         if item_is_a_pearl then
+         if item_is_a_pearl and prisoner then
             local pearl = pp.get_pearl_by_name(prisoner)
             if not pearl then
                minetest.log("Found faulty pearl for " .. prisoner .. ", resetting...")
@@ -135,7 +133,7 @@ local function register_pearl_pickup_tracker()
       then
          local itemstack = ItemStack(itemstring)
          local item_is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(itemstack)
-         if item_is_a_pearl then
+         if item_is_a_pearl and prisoner then
             local pearl = pp.get_pearl_by_name(prisoner)
             if not pearl then
                minetest.log("Found faulty pearl for " .. prisoner .. ", resetting...")
