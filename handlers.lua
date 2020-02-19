@@ -29,19 +29,13 @@ minetest.register_on_leaveplayer(function(player, timed_out)
       end
 end)
 
--- Kill+kick pearled players on join, and kill if they've just been freed.
+-- Pearled players can't join the server.
 
-minetest.register_on_joinplayer(function(player)
-      local pname = player:get_player_name()
-      if pp.is_imprisoned(pname) then
-         player:set_hp(0)
-         local pearl = pp.get_pearl_by_name(pname)
+minetest.register_on_prejoinplayer(function(pname, ip)
+      local pearl = pp.get_pearl_by_name(pname)
+      if pearl then
          local pos, message = pp.get_pos_by_type(pearl)
-         if pos then
-            minetest.kick_player(pname, message)
-         else
-            minetest.chat_send_player(pname, "You were freed from your pearl!")
-         end
+         return message
       end
 end)
 

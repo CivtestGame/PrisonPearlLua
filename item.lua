@@ -58,7 +58,6 @@ local function register_pearl_pickup_tracker()
    -- item entity's on_punch with a prisonpearl check.
 
    local def = core.registered_entities["__builtin:item"]
-   minetest.log("item: " .. dump(def))
    -- local def = table.copy(olddef)
    local old_on_punch = def.on_punch
    local old_on_activate = def.on_activate
