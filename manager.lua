@@ -3,7 +3,6 @@ local storage = minetest.get_mod_storage()
 function pp.save_pearls()
     storage:set_string("pearls", minetest.serialize(pp.imprisoned_players))
     minetest.debug("Saved Pearls")
-    minetest.debug(minetest.serialize(pp.imprisoned_players))
 end
 
 function pp.load_pearls()

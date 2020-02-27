@@ -106,3 +106,29 @@ minetest.register_on_punchplayer(function(player, hitter, time_from_last_punch, 
         end
     tab[hitterName] = tab[hitterName] + damage
 end)
+
+
+-- Handles movement into player inventories
+
+minetest.register_on_player_inventory_action(
+   function(player, action, inventory, inventory_info)
+      if action ~= "put" then
+         return
+      end
+
+      local stack = inventory_info.stack
+      local stack_is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(stack)
+      local pearl_entry = pp.get_pearl_by_name(prisoner)
+      if stack_is_a_pearl and pearl_entry then
+         local pname = player:get_player_name()
+         local pos = player:get_pos()
+         minetest.log(
+            pname .. " took pearl of " .. prisoner
+               .. " at (" .. vtos(pos) .. ")."
+         )
+         pp.update_pearl_location(
+            pearl_entry, { type = "player", name = pname }
+         )
+      end
+   end
+)
