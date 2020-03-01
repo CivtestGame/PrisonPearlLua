@@ -48,7 +48,7 @@ minetest.register_craft({
 	output = "prisonpearl:pearl",
 	recipe = {
 		{"", "default:cobble", ""},
-		{"", "", ""},
+		{"default:cobble", "default:sand", "default:cobble"},
 		{"", "default:cobble", ""},
 	}
 })
