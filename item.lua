@@ -36,7 +36,7 @@ end
 
 minetest.register_craftitem("prisonpearl:pearl", {
 	description = "Prison Pearl",
-	inventory_image = "pearl.png",
+	inventory_image = "prisonpearl_pearl.png",
 	groups = {pearl = 1},
     stack_max = 1,
     on_secondary_use = pearl_on_use,
