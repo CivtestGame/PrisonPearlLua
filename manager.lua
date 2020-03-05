@@ -1,23 +1,34 @@
- -- name : {pearl details}
+
+-- Pearl status persistence
+
 local storage = minetest.get_mod_storage()
+
 function pp.save_pearls()
     storage:set_string("pearls", minetest.serialize(pp.imprisoned_players))
-    minetest.debug("Saved Pearls")
+    minetest.log("[PrisonPearl] Saved pearls to disk.")
 end
 
 function pp.load_pearls()
     pp.imprisoned_players = minetest.deserialize(storage:get_string("pearls"))
     if pp.imprisoned_players == nil then
         pp.imprisoned_players = {}
-        end
-    minetest.debug("Loaded Pearls")
+    end
+    minetest.log("[PrisonPearl] Loaded pearls from disk.")
 end
 
 pp.load_pearls()
 
-minetest.register_on_shutdown(function()
-   pp.save_pearls()
+local timer = 0
+minetest.register_globalstep(function(dtime)
+      timer = timer + dtime
+      if timer < 60*5 then
+         return
+      end
+      timer = 0
+      pp.save_pearls()
 end)
+
+minetest.register_on_shutdown(pp.save_pearls)
 
 -- This function let's the mod know that we need to start tracking a pearl created from someone dying
 function pp.award_pearl(victim, attacker, create_pearl)
