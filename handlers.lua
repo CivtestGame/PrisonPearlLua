@@ -54,8 +54,8 @@ local lastHit = {} -- Stored {player_name: time}
 
 local function get_name_damage_player(name)
     local t = damageTable[name]
-    if t == nil then
-        return nil
+    if not t then
+        return
     end
     -- Now we need to iterate and see which player did the most damage
     local mAttacker, mDamage = nil, 0
@@ -81,8 +81,7 @@ minetest.register_on_dieplayer(function(player)
     local name = player:get_player_name()
     -- Now lets see if there was a player that damaged them
     local attacker = get_name_damage_player(name)
-    -- Check if attacker exists if not escape
-    if attacker == nil then
+    if not attacker then
         return
     end
     if pp.award_pearl(name, attacker) then
@@ -95,18 +94,35 @@ end)
 
 -- Handles calculating player damage to see who gets awarded an imprisonment
 
-minetest.register_on_punchplayer(function(player, hitter, time_from_last_punch, tool_capabilities, dir, damage)
-    local playerName, hitterName = player:get_player_name(), hitter:get_player_name()
-    if damageTable[playerName] == nil then
-        damageTable[playerName] = {}
-        end
-    local tab = damageTable[playerName]
-    if tab[hitterName] == nil then
-        tab[hitterName] = 0
-        end
-    tab[hitterName] = tab[hitterName] + damage
+minetest.register_on_punchplayer(function(player, hitter, time_from_last_punch,
+                                          tool_capabilities, dir, damage)
+      local pname = player:get_player_name()
+      local hname = hitter:get_player_name()
+
+      -- Set damage table for player
+      damageTable[pname] = damageTable[pname] or {}
+
+      -- Insert hitter into damage table for player
+      damageTable[pname][hname] = (damageTable[pname][hname] or 0) + damage
+
+      local time = os.time(os.date("!*t"))
+      lastHit[pname] = time
 end)
 
+
+local timer = 0
+minetest.register_globalstep(function(dtime)
+      timer = timer + dtime
+      if timer < 10 then
+         return
+      end
+      local time = os.time(os.date("!*t"))
+      for pname,hit_time in pairs(lastHit) do
+         if time > hit_time + 5 * 60 then
+            lastHit[pname] = nil
+         end
+      end
+end)
 
 -- Handles movement into player inventories
 

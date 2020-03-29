@@ -47,8 +47,9 @@ function pp.award_pearl(victim, attacker, create_pearl)
        end
     end
 
-    for i, item in ipairs(inv:get_list("main")) do -- Update the item,
-        if item:get_name() == "prisonpearl:pearl" then -- Now we need to check if it has metadata or not
+    for i, item in ipairs(inv:get_list("main")) do
+       -- Now we need to check if it has metadata or not
+        if item:get_name() == "prisonpearl:pearl" then
             local meta = item:get_meta()
             if meta:get_string("prisoner") == "" then
                -- If no meta data then we know that we can use it
@@ -57,7 +58,9 @@ function pp.award_pearl(victim, attacker, create_pearl)
                 inv:set_stack("main", i, item)
 
                 -- Now we want to add the player to the db tracking
-                pp.imprisoned_players[victim] = {name=victim, location=location, isDirty=true}
+                pp.imprisoned_players[victim] = {
+                   name = victim, location = location, isDirty = true
+                }
                 -- Now we want to kick the player
                 minetest.kick_player(victim, "You have been pearled!")
                 pp.save_pearls()
