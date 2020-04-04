@@ -33,9 +33,120 @@ end)
 
 minetest.register_on_prejoinplayer(function(pname, ip)
       local pearl = pp.get_pearl_by_name(pname)
-      if pearl then
-         local pos, message = pp.get_pos_by_type(pearl)
-         return message
+      if not pearl then
+         return
+      end
+
+      if pearl.location.type == "cell" then
+         return
+      end
+
+      local pos, message = pp.get_pos_by_type(pearl)
+      return message
+end)
+
+-- Celled players respawn in their cell
+
+minetest.register_on_joinplayer(function(player)
+      local pname = player:get_player_name()
+      local has_cell_core, pearl_entry = pp.player_has_cell_core(pname)
+      if not has_cell_core then
+         return
+      end
+
+      if not pearl_entry.cell_new then
+         return
+      end
+
+      minetest.after(
+         3,
+         function()
+            minetest.chat_send_player(
+               pname, "While away, were assigned to a Prison Cell!"
+            )
+         end
+      )
+      pp.teleport_to_cell_core(player)
+end)
+
+minetest.register_on_respawnplayer(function(player)
+      local pname = player:get_player_name()
+      local has_cell_core, pearl_entry = pp.player_has_cell_core(pname)
+      if not has_cell_core then
+         return
+      end
+
+      pp.teleport_to_cell_core(player)
+
+      minetest.chat_send_player(
+         pname, "You respawned in your Prison Cell."
+      )
+end)
+
+
+
+local timer = 0
+minetest.register_globalstep(function(dtime)
+      timer = timer + dtime
+      if timer < 1 then
+         return
+      end
+      timer = 0
+
+      for _,player in ipairs(minetest.get_connected_players()) do
+         local pname = player:get_player_name()
+         local has_cell, pearl_entry = pp.player_has_cell_core(pname)
+         if has_cell then
+            local cell_pos = pearl_entry.location.pos
+            local meta = minetest.get_meta(cell_pos)
+            local cell_h = meta:get_int("cell_height")
+            local cell_w = meta:get_int("cell_width")
+
+            local cell_x_min = cell_pos.x - cell_w
+            local cell_x_max = cell_pos.x + cell_w
+            local cell_z_min = cell_pos.z - cell_w
+            local cell_z_max = cell_pos.z + cell_w
+
+            local cell_y_min = cell_pos.y - cell_h
+            local cell_y_max = cell_pos.y + cell_h
+
+            local ppos = player:get_pos()
+
+            local new_x
+            if ppos.x < cell_x_min then
+               new_x = cell_x_min
+            elseif ppos.x > cell_x_max then
+               new_x = cell_x_max
+            end
+
+            local new_z
+            if ppos.z < cell_z_min then
+               new_z = cell_z_min
+            elseif ppos.z > cell_z_max then
+               new_z = cell_z_max
+            end
+
+            local new_y
+            if ppos.y < cell_y_min then
+               minetest.chat_send_player(
+                  pname, "You fell out of your cell and were teleported back."
+               )
+               pp.teleport_to_cell_core(player)
+               goto continue
+            elseif ppos.z > cell_z_max then
+               new_y = cell_y_max
+            end
+
+            if new_x or new_z or new_y then
+               ppos.x = new_x or ppos.x
+               ppos.z = new_z or ppos.z
+               ppos.y = new_y or ppos.y
+               minetest.chat_send_player(pname, "You cannot leave your cell!")
+               player:set_pos(ppos)
+            end
+
+            ::continue::
+         end
       end
 end)
 

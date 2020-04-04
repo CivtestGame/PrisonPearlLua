@@ -102,6 +102,8 @@ minetest.register_chatcommand("pplocate", {
             msg = "by " .. pearl_entry.location.name
          elseif pearl_entry.location.type == "node" then
             msg = "in a container"
+         elseif pearl_entry.location.type == "cell" then
+            msg = "in a cell"
          elseif pearl_entry.location.type == "ground" then
             msg = "on the ground"
          end

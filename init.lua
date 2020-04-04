@@ -13,6 +13,7 @@ dofile(modpath .. "/manager.lua")
 dofile(modpath .. "/tracking.lua")
 dofile(modpath .. "/handlers.lua")
 dofile(modpath .. "/commands.lua")
+dofile(modpath .. "/cell.lua")
 
 minetest.debug("PrisonPearl initialised.")
 

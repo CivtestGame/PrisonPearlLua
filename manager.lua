@@ -101,6 +101,10 @@ function pp.get_pos_by_type(pearl)
     elseif pearl.location.type == 'node' then
        local pos = pearl.location.pos
        return pos, "Your pearl is held in a container at " .. vtos(pos) .. "."
+    elseif pearl.location.type == 'cell' then
+       local pos = pearl.location.pos
+       return pos, "Your pearl is assigned to the Cell Core at "
+          .. vtos(pos) .. "."
     elseif pearl.location.type == 'ground' then
        local pos = pearl.location.pos
        return pos, "Your pearl is on the ground at " .. vtos(pos) .. "."
