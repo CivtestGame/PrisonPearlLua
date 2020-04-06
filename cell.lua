@@ -115,7 +115,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
       local new_width = tonumber(fields["cell_area_width"])
       local new_height = tonumber(fields["cell_area_height"])
-      local new_muted = (fields["cell_muted"] and "YES") or "NO"
+      local new_muted = tostring(fields["cell_muted"])
       if new_width and new_width then
          local meta = minetest.get_meta(pos)
          meta:set_int("cell_height", new_height)
@@ -192,6 +192,33 @@ local function cell_core_on_construct(pos)
    meta:set_string("prisoner_muted", "false")
 end
 
+local function check_cell_clearance(pos)
+   local pos_y_plus_1 = vector.new(pos.x, pos.y + 1, pos.z)
+   local n1 = minetest.get_node_or_nil(pos_y_plus_1)
+   if n1.name == "air" then
+      local pos_y_plus_2 = vector.new(pos.x, pos.y + 2, pos.z)
+      local n2 = minetest.get_node_or_nil(pos_y_plus_2)
+      if n2.name == "air" then
+         return true
+      end
+   end
+   return false
+end
+
+local function cell_core_on_place(itemstack, placer, pointed_thing)
+   local above = pointed_thing.above
+   local has_clearance = check_cell_clearance(above)
+   if not has_clearance then
+      minetest.chat_send_player(
+         placer:get_player_name(), "The two blocks above a Cell Core "
+         .. "must be air."
+      )
+      return itemstack, false
+   end
+
+   return minetest.item_place(itemstack, placer, pointed_thing)
+end
+
 local function cell_core_on_punch(pos, node, puncher, pointed_thing)
    local msg = messager(puncher)
    local held = puncher:get_wielded_item()
@@ -213,8 +240,32 @@ local function cell_core_on_punch(pos, node, puncher, pointed_thing)
    end
 end
 
+local function check_for_underneath_cell(pos)
+   local pos_y_minus_1 = vector.new(pos.x, pos.y - 1, pos.z)
+   local n1 = minetest.get_node_or_nil(pos_y_minus_1)
+   if n1.name ~= "prisonpearl:cell_core" then
+      local pos_y_minus_2 = vector.new(pos.x, pos.y - 2, pos.z)
+      local n2 = minetest.get_node_or_nil(pos_y_minus_2)
+      if n2.name ~= "prisonpearl:cell_core" then
+         return false
+      end
+   end
+   return true
+end
+
 local old_is_protected = minetest.is_protected
 function minetest.is_protected(pos, pname, action)
+
+   if action == minetest.PLACE_ACTION then
+      local cell_is_underneath = check_for_underneath_cell(pos)
+      if cell_is_underneath then
+         minetest.chat_send_player(
+            pname, "You cannot place blocks above a Cell Core!"
+         )
+         return true
+      end
+   end
+
    local has_cell_core, pearl_entry = pp.player_has_cell_core(pname)
    if not has_cell_core then
       return old_is_protected(pos, pname, action)
@@ -282,5 +333,38 @@ minetest.register_node("prisonpearl:cell_core",
         on_construct = cell_core_on_construct,
         on_dig = cell_core_on_dig,
         on_rightclick = cell_core_on_rightclick,
+        on_place = cell_core_on_place,
    }
 )
+
+--------------------------------------------------------------------------------
+--
+-- CivChat handler to enable the Cell Core prisoner mute
+--
+--------------------------------------------------------------------------------
+
+local has_civchat = minetest.get_modpath("civchat")
+if has_civchat then
+
+   civchat.register_handler(function(from, to, msg)
+         local has_cell_core, pearl_entry = pp.player_has_cell_core(from)
+         if not has_cell_core then
+            return true
+         end
+
+         local cell_pos = pearl_entry.location.pos
+
+         local meta = minetest.get_meta(cell_pos)
+         local from_has_cell_mute = meta:get_string("prisoner_muted")
+         if from_has_cell_mute == "true" then
+            minetest.chat_send_player(
+               from, "You have been muted by your captor, so you cannot "
+                  .. "use public chat."
+            )
+            return false
+         end
+
+         return true
+   end)
+
+end
