@@ -5,9 +5,9 @@
 --
 --------------------------------------------------------------------------------
 
-local function messager(puncher)
-   local pname = (type(puncher) == "string" and puncher)
-      or puncher:get_player_name()
+local function messager(player)
+   local pname = (type(player) == "string" and player)
+      or player:get_player_name()
    return function(msg)
       return minetest.chat_send_player(pname, msg)
    end
