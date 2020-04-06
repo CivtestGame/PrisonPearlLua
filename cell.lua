@@ -113,8 +113,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
          return
       end
 
-      minetest.log("fields: " .. dump(fields))
-
       local new_width = tonumber(fields["cell_area_width"])
       local new_height = tonumber(fields["cell_area_height"])
       local new_muted = (fields["cell_muted"] and "YES") or "NO"
@@ -200,7 +198,7 @@ local function cell_core_on_punch(pos, node, puncher, pointed_thing)
 
    local is_pearl, prisoner = pp.is_itemstack_a_prisonpearl(held)
    if not is_pearl then
-      return
+      return minetest.node_punch(pos, node, puncher, pointed_thing)
    elseif not prisoner then
       msg("This Prison Pearl has no prisoner.")
       return
