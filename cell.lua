@@ -317,6 +317,18 @@ local function cell_core_on_dig(pos, node, digger)
    end
 end
 
+local function cell_core_after_dig_node(pos, oldnode, oldmetadata, digger)
+   local prisoner = oldmetadata.fields["assigned_prisoner"]
+   if prisoner then
+      local prisoner_msg = messager(prisoner)
+      local digger_msg = messager(digger)
+
+      pp.free_pearl(prisoner)
+      prisoner_msg("You were freed from your Prison Cell.")
+      digger_msg("You freed '" .. prisoner .. "' from their Prison Cell.")
+   end
+end
+
 local function cell_core_on_rightclick(pos, node, clicker,
                                        itemstack, pointed_thing)
    show_cell_core_formspec(clicker, pos)
@@ -334,6 +346,7 @@ minetest.register_node("prisonpearl:cell_core",
         on_dig = cell_core_on_dig,
         on_rightclick = cell_core_on_rightclick,
         on_place = cell_core_on_place,
+        after_dig_node = cell_core_after_dig_node
    }
 )
 

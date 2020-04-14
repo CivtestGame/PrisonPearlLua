@@ -30,9 +30,20 @@ end)
 
 minetest.register_on_shutdown(pp.save_pearls)
 
--- This function let's the mod know that we need to start tracking a pearl created from someone dying
+-- This function lets the mod know that we need to start tracking a pearl
+-- created from someone dying
 function pp.award_pearl(victim, attacker, create_pearl)
-    -- Now we need to award a prison item to the attacker.
+    -- First, ignore attempts to re-imprison an already imprisoned player
+    local pearl_entry = pp.get_pearl_by_name(victim)
+    if pearl_entry then
+       minetest.chat_send_player(
+          attacker, victim .. " is already imprisoned at "
+             .. minetest.pos_to_string(pearl_entry.location.pos) .. "."
+       )
+       return false
+    end
+
+    -- Find (or create) a suitable empty PrisonPearl
     local location = {type="player", name=attacker}
     local inv = minetest.get_inventory(location)
     local stack = {name="prisonpearl:pearl", count=1, metadata=""}
@@ -48,26 +59,25 @@ function pp.award_pearl(victim, attacker, create_pearl)
     end
 
     for i, item in ipairs(inv:get_list("main")) do
-       -- Now we need to check if it has metadata or not
-        if item:get_name() == "prisonpearl:pearl" then
-            local meta = item:get_meta()
-            if meta:get_string("prisoner") == "" then
-               -- If no meta data then we know that we can use it
-                meta:set_string("prisoner", victim)
-                meta:set_string("description", victim .. "'s PrisonPearl")
-                inv:set_stack("main", i, item)
+       local is_pearl, prisoner = pp.is_itemstack_a_prisonpearl(item)
+       if is_pearl and not prisoner then
+          -- If no prisoner metadata then we know that we can use this pearl
+          local meta = item:get_meta()
+          meta:set_string("prisoner", victim)
+          meta:set_string("description", victim .. "'s PrisonPearl")
+          inv:set_stack("main", i, item)
 
-                -- Now we want to add the player to the db tracking
-                pp.imprisoned_players[victim] = {
-                   name = victim, location = location, isDirty = true
-                }
-                -- Now we want to kick the player
-                minetest.kick_player(victim, "You have been pearled!")
-                pp.save_pearls()
-                return true
-                end
-            end
-        end
+          -- Now we want to add the player to the tracker
+          pp.imprisoned_players[victim] = {
+             name = victim, location = location, isDirty = true
+          }
+          -- Now we want to kick the player
+          minetest.kick_player(victim, "You have been pearled!")
+          pp.save_pearls()
+          return true
+       end
+    end
+
     return false
 end
 
