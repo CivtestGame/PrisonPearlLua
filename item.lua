@@ -23,7 +23,7 @@ local function pearl_on_drop(itemstack, dropper, pos)
          pp.reset_pearl(itemstack)
       else
          local pearl = pp.get_pearl_by_name(prisoner)
-         local location = {type="ground", pos=pos}
+         local location = { type="ground", pos=pos, entity = nil }
          pp.update_pearl_location(pearl, location)
          minetest.log(
             dropper:get_player_name() .. " dropped the pearl of " .. prisoner
@@ -80,9 +80,11 @@ local function register_pearl_pickup_tracker()
                   minetest.log("Found faulty pearl for " .. prisoner .. ", resetting...")
                   pp.reset_pearl(itemstack)
                   self:set_item(itemstack)
-               elseif pearl.location.type ~= "ground" then
+               elseif pearl.location.type ~= "ground"
+                  or not pearl.location.entity
+               then
                   local pos = self.object:get_pos()
-                  local location = { type="ground", pos=pos }
+                  local location = { type="ground", pos=pos, entity = self }
                   pp.update_pearl_location(pearl, location)
                   minetest.log(
                      "The pearl of " .. prisoner
@@ -112,7 +114,7 @@ local function register_pearl_pickup_tracker()
                self:set_item(itemstack)
             else
                local pos = self.object:get_pos()
-               local location = { type="ground", pos=pos }
+               local location = { type="ground", pos=pos, entity = self }
                pp.update_pearl_location(pearl, location)
                minetest.log(
                   "The pearl of " .. prisoner .. " was dropped at ("

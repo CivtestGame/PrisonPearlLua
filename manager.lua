@@ -4,7 +4,14 @@
 local storage = minetest.get_mod_storage()
 
 function pp.save_pearls()
-    storage:set_string("pearls", minetest.serialize(pp.imprisoned_players))
+    -- Avoid serializing entity userdata in locations. A bit of a hack.
+    local imprisoned_players_copy = {}
+    for pname,entry in pairs(pp.imprisoned_players) do
+       imprisoned_players_copy[pname] = entry
+       imprisoned_players_copy[pname].entity = nil
+    end
+
+    storage:set_string("pearls", minetest.serialize(imprisoned_players_copy))
     minetest.log("[PrisonPearl] Saved pearls to disk.")
 end
 
@@ -18,17 +25,87 @@ end
 
 pp.load_pearls()
 
-local timer = 0
+local timer1 = 0
 minetest.register_globalstep(function(dtime)
-      timer = timer + dtime
-      if timer < 60*5 then
+      timer1 = timer1 + dtime
+      if timer1 < 60*5 then
          return
       end
-      timer = 0
+      timer1 = 0
       pp.save_pearls()
 end)
 
 minetest.register_on_shutdown(pp.save_pearls)
+
+-- Timer + globalstep to expire pearl entries if they've been held for too long
+
+local PEARL_EXPIRY_TIME = 30 * 60
+local PEARL_EXPIRY_GLOBALSTEP_INTERVAL = 60
+
+local timer2 = 0
+minetest.register_globalstep(function(dtime)
+      timer2 = timer2 + dtime
+      if timer2 < PEARL_EXPIRY_GLOBALSTEP_INTERVAL then
+         return
+      end
+      timer2 = 0
+
+      local time = os.time(os.date("!*t"))
+      for pname,entry in pairs(pp.imprisoned_players) do
+         local location = entry.location
+
+         entry.creation_time = entry.creation_time or time
+
+         -- Check for expiry of imprisonments that are not tied to a cell.
+         if location.type ~= "cell"
+            and entry.creation_time + PEARL_EXPIRY_TIME < time
+         then
+            if location.type == "ground" then
+               -- Remove expired pearls that have been dropped (item entities).
+               local item_entity = location.entity
+               if item_entity then
+                  item_entity.itemstring = ""
+                  item_entity.object:remove()
+                  minetest.log(
+                     "Dropped pearl of " .. pname .. " at "
+                        .. minetest.pos_to_string(location.pos) .. " expired. "
+                        .. "Item entity was removed."
+                  )
+                  pp.free_pearl(pname)
+               else
+                  minetest.log(
+                     "Faulty pearl item entity for player " .. pname
+                        .. " at " .. minetest.pos_to_string(location.pos)
+                        .. ". This should fix itself."
+                  )
+               end
+            else
+               -- Remove expired pearls that are in a player or node inventory.
+               local inv = minetest.get_inventory(location)
+               if location.type == "player" then
+                  minetest.chat_send_player(
+                     location.name, "Your held Prison Pearl of '"
+                        .. pname .. "' expired, and the player was freed!"
+                  )
+               end
+
+               local holder_pos = location.pos
+                  or minetest.get_player_by_name(location.name):get_pos()
+
+               local holder_desc = location.name and " " .. location.name
+
+               minetest.log(
+                  "Pearl of " .. pname .. " expired in inventory of "
+                     .. location.type .. (holder_desc or "") .. " at "
+                     .. minetest.pos_to_string(holder_pos) .. "."
+               )
+
+               pp.remove_pearl_from_inv(inv, pname)
+               pp.free_pearl(pname)
+            end
+         end
+      end
+end)
 
 -- This function lets the mod know that we need to start tracking a pearl
 -- created from someone dying
@@ -66,10 +143,12 @@ function pp.award_pearl(victim, attacker, create_pearl)
           meta:set_string("prisoner", victim)
           meta:set_string("description", victim .. "'s PrisonPearl")
           inv:set_stack("main", i, item)
+          local time = os.time(os.date("!*t"))
 
           -- Now we want to add the player to the tracker
           pp.imprisoned_players[victim] = {
-             name = victim, location = location, isDirty = true
+             name = victim, location = location, isDirty = true,
+             creation_time = time
           }
           -- Now we want to kick the player
           minetest.kick_player(victim, "You have been pearled!")
@@ -80,7 +159,6 @@ function pp.award_pearl(victim, attacker, create_pearl)
 
     return false
 end
-
 
 function pp.update_pearl_location(pearl, location)
     pearl.location = location

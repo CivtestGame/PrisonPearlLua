@@ -10,9 +10,9 @@ minetest.register_on_leaveplayer(function(player, timed_out)
       local lists = inv:get_lists()
       for listname, list in pairs(lists) do
          for _,stack in ipairs(list) do
-            local stack_is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(stack)
+            local is_a_pearl, prisoner = pp.is_itemstack_a_prisonpearl(stack)
             local pearl_entry = pp.get_pearl_by_name(prisoner)
-            if stack_is_a_pearl and pearl_entry then
+            if is_a_pearl and pearl_entry then
                local pname = player:get_player_name()
                local pos = player:get_pos()
                minetest.log(
@@ -23,7 +23,7 @@ minetest.register_on_leaveplayer(function(player, timed_out)
                -- for some reason dropping the pearl borks the pearl
                -- itemstack metadata, so we pass the prisoner name
                on_drop(stack, player, pos)
-               pp.remove_pearl_item(player, prisoner)
+               pp.remove_pearl_from_inv(inv, prisoner)
             end
          end
       end
@@ -82,7 +82,6 @@ minetest.register_on_respawnplayer(function(player)
          pname, "You respawned in your Prison Cell."
       )
 end)
-
 
 
 local timer = 0

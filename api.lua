@@ -1,15 +1,16 @@
 
--- Nukes the pearls imprisoning prisoner from a player's inventory
-function pp.remove_pearl_item(player, prisoner)
-   local inv = player:get_inventory()
-   if inv then
-      local lists = inv:get_lists()
-      for listname, list in pairs(lists) do
-         for i,stack in ipairs(list) do
-            local stack_is_a_pearl, item_prisoner = pp.is_itemstack_a_prisonpearl(stack)
-            if stack_is_a_pearl and item_prisoner == prisoner then
-               inv:set_stack(listname, i, ItemStack(nil))
+-- Nukes the pearls imprisoning prisoner from an inventory
+function pp.remove_pearl_from_inv(inv, prisoner, revert)
+   local lists = inv:get_lists()
+   for listname, list in pairs(lists) do
+      for i,stack in ipairs(list) do
+         local is_a_pearl, item_prisoner = pp.is_itemstack_a_prisonpearl(stack)
+         if is_a_pearl and item_prisoner == prisoner then
+            local new_stack = ItemStack(nil)
+            if revert then
+               new_stack = pp.reset_pearl(inv:get_stack(listname, i))
             end
+            inv:set_stack(listname, i, new_stack)
          end
       end
    end
