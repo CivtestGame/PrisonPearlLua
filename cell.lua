@@ -58,6 +58,9 @@ function pp.assign_cell(prisoner, pos)
    local node = { name = "prisonpearl:cell_core_occupied" }
    minetest.swap_node(pos, node)
 
+   local meta = minetest.get_meta(pos)
+   meta:set_string("infotext", prisoner .. "'s Prison Cell")
+
    return true, "'"..pearl_entry.name.."' was assigned to Cell Core at "
       .. minetest.pos_to_string(pos).."."
 end

@@ -108,10 +108,21 @@ minetest.register_chatcommand("pplocate", {
             msg = "on the ground"
          end
 
+         local expiry_string = ""
+         if pearl_entry.location.type ~= "cell" then
+            local expiry = pearl_entry.creation_time + pp.PEARL_EXPIRY_TIME
+            local time = os.time(os.date("!*t"))
+            local diff = expiry - time
+            if expiry > 0 then
+               expiry_string = " The Prison Pearl will expire in "
+                  .. math.floor(diff / 60) .. " minutes."
+            end
+         end
+
          minetest.chat_send_player(
             sender_name,
             "Player " .. player .. " is imprisoned " .. msg .. " at ("
-               .. vtos(pos) .. ")."
+               .. vtos(pos) .. ")." .. expiry_string
          )
       end
 

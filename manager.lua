@@ -39,13 +39,13 @@ minetest.register_on_shutdown(pp.save_pearls)
 
 -- Timer + globalstep to expire pearl entries if they've been held for too long
 
-local PEARL_EXPIRY_TIME = 30 * 60
-local PEARL_EXPIRY_GLOBALSTEP_INTERVAL = 60
+pp.PEARL_EXPIRY_TIME = 30 * 60
+pp.PEARL_EXPIRY_GLOBALSTEP_INTERVAL = 60
 
 local timer2 = 0
 minetest.register_globalstep(function(dtime)
       timer2 = timer2 + dtime
-      if timer2 < PEARL_EXPIRY_GLOBALSTEP_INTERVAL then
+      if timer2 < pp.PEARL_EXPIRY_GLOBALSTEP_INTERVAL then
          return
       end
       timer2 = 0
@@ -58,7 +58,7 @@ minetest.register_globalstep(function(dtime)
 
          -- Check for expiry of imprisonments that are not tied to a cell.
          if location.type ~= "cell"
-            and entry.creation_time + PEARL_EXPIRY_TIME < time
+            and entry.creation_time + pp.PEARL_EXPIRY_TIME < time
          then
             if location.type == "ground" then
                -- Remove expired pearls that have been dropped (item entities).
@@ -124,10 +124,8 @@ function pp.award_pearl(victim, attacker, create_pearl)
     local location = {type="player", name=attacker}
     local inv = minetest.get_inventory(location)
     local stack = {name="prisonpearl:pearl", count=1, metadata=""}
-    if create_pearl
-       and inv
-       and not inv:contains_item("main", stack)
-    then
+
+    if create_pearl and inv then
        if inv:room_for_item("main", stack) then
           inv:add_item("main", stack)
        else
