@@ -55,6 +55,9 @@ function pp.assign_cell(prisoner, pos)
    pp.update_pearl_location(pearl_entry, { type = "cell", pos = pos })
    pearl_entry.cell_new = true
 
+   local node = { name = "prisonpearl:cell_core_occupied" }
+   minetest.swap_node(pos, node)
+
    return true, "'"..pearl_entry.name.."' was assigned to Cell Core at "
       .. minetest.pos_to_string(pos).."."
 end
@@ -240,13 +243,23 @@ local function cell_core_on_punch(pos, node, puncher, pointed_thing)
    end
 end
 
+function pp.node_is_cell_core(pos)
+   local node = minetest.get_node_or_nil(pos)
+   local node_name = node.name
+   if node_name == "prisonpearl:cell_core"
+      or node_name == "prisonpearl:cell_core_occupied"
+   then
+      return true
+   else
+      return false
+   end
+end
+
 local function check_for_underneath_cell(pos)
    local pos_y_minus_1 = vector.new(pos.x, pos.y - 1, pos.z)
-   local n1 = minetest.get_node_or_nil(pos_y_minus_1)
-   if n1.name ~= "prisonpearl:cell_core" then
+   if not pp.node_is_cell_core(pos_y_minus_1) then
       local pos_y_minus_2 = vector.new(pos.x, pos.y - 2, pos.z)
-      local n2 = minetest.get_node_or_nil(pos_y_minus_2)
-      if n2.name ~= "prisonpearl:cell_core" then
+      if not pp.node_is_cell_core(pos_y_minus_2) then
          return false
       end
    end
@@ -271,8 +284,7 @@ function minetest.is_protected(pos, pname, action)
       return old_is_protected(pos, pname, action)
    end
 
-   local node = minetest.get_node(pos)
-   if node.name == "prisonpearl:cell_core" then
+   if pp.node_is_cell_core(pos) then
       minetest.chat_send_player(
          pname, "Imprisoned players cannot dig or interact with Cell Cores."
       )
@@ -349,6 +361,23 @@ minetest.register_node("prisonpearl:cell_core",
         after_dig_node = cell_core_after_dig_node
    }
 )
+
+minetest.register_node("prisonpearl:cell_core_occupied",
+   {
+      	description = "Prison Cell Core (Occupied)",
+        tiles = { "^[colorize:#ffffff:255" },
+        groups = { choppy = 1 },
+        drop = "",
+        sounds = default.node_sound_stone_defaults(),
+        on_punch = cell_core_on_punch,
+        on_construct = cell_core_on_construct,
+        on_dig = cell_core_on_dig,
+        on_rightclick = cell_core_on_rightclick,
+        on_place = cell_core_on_place,
+        after_dig_node = cell_core_after_dig_node
+   }
+)
+
 
 --------------------------------------------------------------------------------
 --
