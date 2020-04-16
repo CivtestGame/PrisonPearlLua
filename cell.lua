@@ -369,7 +369,7 @@ minetest.register_node("prisonpearl:cell_core_occupied",
    {
       	description = "Prison Cell Core (Occupied)",
         tiles = { "^[colorize:#ffffff:255" },
-        groups = { choppy = 1 },
+        groups = { choppy = 1, not_in_creative_inventory = 1 },
         drop = "",
         sounds = default.node_sound_stone_defaults(),
         on_punch = cell_core_on_punch,
