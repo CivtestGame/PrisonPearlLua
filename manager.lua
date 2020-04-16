@@ -196,3 +196,34 @@ function pp.get_pos_by_type(pearl)
        return pos, "Your pearl is on the ground at " .. vtos(pos) .. "."
     end
 end
+
+--------------------------------------------------------------------------------
+--
+-- CombatTagMT compatibility
+--
+--------------------------------------------------------------------------------
+
+if minetest.get_modpath("combattagmt") then
+
+   local old_tp_on_death = TagPlayer.on_death
+   TagPlayer.on_death = function(self, dtime)
+      old_tp_on_death(self, dtime)
+
+      local victim = self.playername
+      local attacker = pp.get_main_attacker(victim)
+
+      if not attacker then
+         return
+      end
+
+      if pp.award_pearl(victim, attacker) then
+         minetest.chat_send_player(
+            attacker, "You have imprisoned " .. victim .. "!"
+         )
+         pp.damageTable[victim] = nil
+         pp.lastHit[victim] = nil
+      end
+   end
+
+   minetest.log("[PrisonPearlLua] Compatibility with CombatTagMT enabled.")
+end

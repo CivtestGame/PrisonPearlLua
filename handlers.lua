@@ -156,14 +156,14 @@ end)
 --------------------------------------------------------------------------------
 
 -- Time to do damage calculation and see who to award a pearl to
-local damageTable = {} -- Stored {playername: {attacker: damage}}
+pp.damageTable = {} -- Stored {playername: {attacker: damage}}
 -- This variable stores the last time a player was attacked. Resets if no damage for 5 min
-local lastHit = {} -- Stored {player_name: time}
+pp.lastHit = {} -- Stored {player_name: time}
 
 --minetest.after(time, func, ...)
 
-local function get_name_damage_player(name)
-    local t = damageTable[name]
+function pp.get_main_attacker(name)
+    local t = pp.damageTable[name]
     if not t then
         return
     end
@@ -190,14 +190,14 @@ end
 minetest.register_on_dieplayer(function(player)
     local name = player:get_player_name()
     -- Now lets see if there was a player that damaged them
-    local attacker = get_name_damage_player(name)
+    local attacker = pp.get_main_attacker(name)
     if not attacker then
         return
     end
     if pp.award_pearl(name, attacker) then
        minetest.chat_send_player(attacker, "You have imprisoned " .. name .. "!")
-       damageTable[name] = nil
-       lastHit[name] = nil
+       pp.damageTable[name] = nil
+       pp.lastHit[name] = nil
     end
 end)
 
@@ -210,13 +210,13 @@ minetest.register_on_punchplayer(function(player, hitter, time_from_last_punch,
       local hname = hitter:get_player_name()
 
       -- Set damage table for player
-      damageTable[pname] = damageTable[pname] or {}
+      pp.damageTable[pname] = pp.damageTable[pname] or {}
 
       -- Insert hitter into damage table for player
-      damageTable[pname][hname] = (damageTable[pname][hname] or 0) + damage
+      pp.damageTable[pname][hname] = (pp.damageTable[pname][hname] or 0) + damage
 
       local time = os.time(os.date("!*t"))
-      lastHit[pname] = time
+      pp.lastHit[pname] = time
 end)
 
 
@@ -227,9 +227,9 @@ minetest.register_globalstep(function(dtime)
          return
       end
       local time = os.time(os.date("!*t"))
-      for pname,hit_time in pairs(lastHit) do
+      for pname,hit_time in pairs(pp.lastHit) do
          if time > hit_time + 5 * 60 then
-            lastHit[pname] = nil
+            pp.lastHit[pname] = nil
          end
       end
 end)
