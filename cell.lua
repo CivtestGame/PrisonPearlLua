@@ -248,6 +248,9 @@ end
 
 function pp.node_is_cell_core(pos)
    local node = minetest.get_node_or_nil(pos)
+   if not node then
+      return false
+   end
    local node_name = node.name
    if node_name == "prisonpearl:cell_core"
       or node_name == "prisonpearl:cell_core_occupied"
