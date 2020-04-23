@@ -355,7 +355,31 @@ end
 minetest.register_node("prisonpearl:cell_core",
    {
       	description = "Prison Cell Core",
-        tiles = { "^[colorize:#f00f3d:255" },
+	tiles = {
+		"default_pedestal_top.png",
+		"default_pedestal_top.png",
+		"default_pedestal_side.png",
+		"default_pedestal_side.png",
+		"default_pedestal_side.png",
+		"default_pedestal_side.png"
+	},
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5, 0.5, -0.4375, 0.5}, -- NodeBox1
+			{-0.4375, -0.4375, -0.4375, 0.4375, -0.375, 0.4375}, -- NodeBox2
+			{-0.375, -0.375, 0.125, -0.125, -0.0625, 0.375}, -- NodeBox3
+			{0.125, -0.375, 0.125, 0.375, -0.0625, 0.375}, -- NodeBox4
+			{-0.375, -0.375, -0.375, -0.125, -0.0625, -0.125}, -- NodeBox5
+			{0.125, -0.375, -0.375, 0.375, -0.0625, -0.125}, -- NodeBox6
+			{-0.4375, -0.0625, -0.4375, 0.4375, 0, 0.4375}, -- NodeBox7
+			{-0.375, 0, -0.375, 0.375, 0.0625, 0.375}, -- NodeBox8
+                        {-0.25, -0.375, -0.25, 0.25, -0.0625, 0.25}, -- NodeBox20
+		}
+	},
+
         groups = { choppy = 1 },
         drop = "",
         sounds = default.node_sound_stone_defaults(),
@@ -371,7 +395,33 @@ minetest.register_node("prisonpearl:cell_core",
 minetest.register_node("prisonpearl:cell_core_occupied",
    {
       	description = "Prison Cell Core (Occupied)",
-        tiles = { "^[colorize:#ffffff:255" },
+	tiles = {
+		"default_pedestal_top_occupied.png",
+		"default_pedestal_top.png",
+		"default_pedestal_side_occupied.png",
+		"default_pedestal_side_occupied.png",
+		"default_pedestal_side_occupied.png",
+		"default_pedestal_side_occupied.png"
+	},
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = {
+                   {-0.5, -0.5, -0.5, 0.5, -0.4375, 0.5}, -- NodeBox1
+                   {-0.4375, -0.4375, -0.4375, 0.4375, -0.375, 0.4375}, -- NodeBox2
+                   {-0.375, -0.375, 0.125, -0.125, -0.0625, 0.375}, -- NodeBox3
+                   {0.125, -0.375, 0.125, 0.375, -0.0625, 0.375}, -- NodeBox4
+                   {-0.375, -0.375, -0.375, -0.125, -0.0625, -0.125}, -- NodeBox5
+                   {0.125, -0.375, -0.375, 0.375, -0.0625, -0.125}, -- NodeBox6
+                   {-0.4375, -0.0625, -0.4375, 0.4375, 0, 0.4375}, -- NodeBox7
+                   {-0.375, 0, -0.375, 0.375, 0.0625, 0.375}, -- NodeBox8
+                   {-0.1875, 0.0625, -0.1875, 0.1875, 0.5, 0.1875}, -- NodeBox9
+                   {-0.25, 0.0625, -0.25, 0.25, 0.4375, 0.25}, -- NodeBox19
+                   {-0.25, -0.375, -0.25, 0.25, -0.0625, 0.25}, -- NodeBox20
+		}
+	},
+
         groups = { choppy = 1, not_in_creative_inventory = 1 },
         drop = "",
         sounds = default.node_sound_stone_defaults(),
