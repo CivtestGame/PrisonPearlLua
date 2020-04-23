@@ -392,6 +392,15 @@ minetest.register_node("prisonpearl:cell_core",
    }
 )
 
+minetest.register_craft({
+	output = "prisonpearl:cell_core",
+	recipe = {
+		{"",               "default:obsidian", ""},
+		{"default:basalt", "default:obsidian", "default:basalt"},
+		{"default:basalt", "default:obsidian", "default:basalt" },
+	}
+})
+
 minetest.register_node("prisonpearl:cell_core_occupied",
    {
       	description = "Prison Cell Core (Occupied)",
