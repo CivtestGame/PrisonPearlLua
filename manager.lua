@@ -110,7 +110,16 @@ end)
 -- This function lets the mod know that we need to start tracking a pearl
 -- created from someone dying
 function pp.award_pearl(victim, attacker, create_pearl)
-    -- First, ignore attempts to re-imprison an already imprisoned player
+    -- First, server admins can't be pearled
+    if minetest.check_player_privs(victim, {server = true}) then
+       minetest.chat_send_player(
+          attacker, "Nice try! Unfortunately, " .. victim .. " is a server "
+             .. "admin, and cannot be imprisoned."
+       )
+       return false
+    end
+
+    -- Second, ignore attempts to re-imprison an already imprisoned player
     local pearl_entry = pp.get_pearl_by_name(victim)
     if pearl_entry then
        minetest.chat_send_player(
@@ -129,6 +138,9 @@ function pp.award_pearl(victim, attacker, create_pearl)
        if inv:room_for_item("main", stack) then
           inv:add_item("main", stack)
        else
+          minetest.chat_send_player(
+             attacker, "No space available in your inventory."
+          )
           return false
        end
     end

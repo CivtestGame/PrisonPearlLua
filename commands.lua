@@ -58,10 +58,6 @@ minetest.register_chatcommand("ppimprisonany", {
             )
             return true
          else
-            minetest.chat_send_player(
-               sender_name,
-               "Pearling " .. player .. " failed, no space in inventory."
-            )
             return false
          end
       else
