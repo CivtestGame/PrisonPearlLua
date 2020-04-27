@@ -63,9 +63,9 @@ local function register_pearl_pickup_tracker()
    local old_on_activate = def.on_activate
    local old_on_step = def.on_step
 
-   def.on_step = function(self, dtime)
+   def.on_step = function(self, dtime, ...)
       if old_on_step then
-         old_on_step(self, dtime)
+         old_on_step(self, dtime, ...)
       end
 
       if self.itemstring then
