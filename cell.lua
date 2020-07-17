@@ -97,6 +97,10 @@ end
 
 local has_citadella = minetest.get_modpath("citadella")
 
+local function clamp(a, n, b)
+   return math.max(math.min(b, n), a)
+end
+
 minetest.register_on_player_receive_fields(function(player, formname, fields)
       local pos = minetest.string_to_pos(formname:split(";")[2])
 
@@ -119,17 +123,31 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
          return
       end
 
-      local new_width = tonumber(fields["cell_area_width"])
-      local new_height = tonumber(fields["cell_area_height"])
-      local new_muted = tostring(fields["cell_muted"])
-      if new_width and new_width then
-         local meta = minetest.get_meta(pos)
-         meta:set_int("cell_height", new_height)
-         meta:set_int("cell_width", new_width)
-         meta:set_string("prisoner_muted", new_muted)
-         msg("Cell area set to "..new_height.." x "..new_width..". "
-                .."Prisoner mute: "..tostring(new_muted)..".")
-      elseif not fields["quit"] then
+      local meta = minetest.get_meta(pos)
+
+      local new_width = (fields["cell_area_width"]
+                            and tonumber(fields["cell_area_width"]))
+         or tonumber(meta:get_string("cell_area_width")) or 3
+
+      local new_height = (fields["cell_area_height"]
+                             and tonumber(fields["cell_area_height"]))
+         or tonumber(meta:get_string("cell_area_height")) or 3
+
+      local new_muted = fields["cell_muted"]
+         or meta:get_string("prisoner_muted") or "false"
+
+      new_width = clamp(3, new_width, 128)
+      meta:set_int("cell_width", new_width)
+
+      new_height = clamp(3, new_height, 128)
+      meta:set_int("cell_height", new_height)
+
+      meta:set_string("prisoner_muted", new_muted)
+
+      msg("Cell area: " .. tostring(new_width).."x"..tostring(new_height)
+             .. ", mute: " .. new_muted)
+
+      if not fields["quit"] and not fields["cell_muted"] then
          msg("Invalid Cell Core management form input.")
          return
       end
@@ -152,9 +170,9 @@ local function make_cell_core_formspec(pos, cell_group)
       "label[0,0;", F(assigned), "'s Cell ", group_string, "]",
 
       "label[0,1;Cell Area (max 128 x 128):]",
-      "field[1,2;1,0.6;cell_area_height;;", cell_height, "]",
+      "field[1,2;1,0.6;cell_area_width;;", cell_width, "]",
       "label[1.75,1.75;x]",
-      "field[2.5,2;1,0.6;cell_area_width;;", cell_width, "]",
+      "field[2.5,2;1,0.6;cell_area_height;;", cell_height, "]",
 
       "checkbox[0,2.5;cell_muted;Mute Prisoner;", muted, "]",
       -- "button_exit[3,3.5;2,1;cell_free;Remove Cell]",
