@@ -114,9 +114,15 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
          local has_privilege, reinf, group
             = ct.has_locked_container_privilege(pos, player)
          if not has_privilege then
-            msg("You cannot access this Cell Core.")
+            msg("You cannot modify this Cell Core.")
             return
          end
+      end
+
+      local ppos = player:get_pos()
+      if vector.distance(pos, ppos) > 5 then
+         msg("You're too far away to modify this Cell Core.")
+         return
       end
 
       if not fields then
