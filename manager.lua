@@ -8,7 +8,10 @@ function pp.save_pearls()
     local imprisoned_players_copy = {}
     for pname,entry in pairs(pp.imprisoned_players) do
        imprisoned_players_copy[pname] = entry
-       imprisoned_players_copy[pname].entity = nil
+
+       if imprisoned_players_copy[pname].location then
+          imprisoned_players_copy[pname].location.entity = nil
+       end
     end
 
     storage:set_string("pearls", minetest.serialize(imprisoned_players_copy))
