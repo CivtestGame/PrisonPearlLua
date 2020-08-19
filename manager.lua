@@ -154,7 +154,9 @@ function pp.award_pearl(victim, attacker, create_pearl)
           -- If no prisoner metadata then we know that we can use this pearl
           local meta = item:get_meta()
           meta:set_string("prisoner", victim)
-          meta:set_string("description", victim .. "'s PrisonPearl")
+          meta:set_string(
+             "description", victim .. "'s PrisonPearl (right-click to free)"
+          )
           inv:set_stack("main", i, item)
           local time = os.time(os.date("!*t"))
 
